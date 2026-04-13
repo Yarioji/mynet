@@ -191,6 +191,15 @@
     .chat-header {
       padding-left: 56px;
     }
+
+    .chat-header-name {
+      font-size: 13px;
+    }
+
+    #sidebar-toggle {
+      top: 14px;
+      left: 8px;
+    }
   }
  
   /* ── SIDEBAR ───────────────────────────── */
@@ -1293,8 +1302,10 @@ async function openChat(chatId) {
   // WebSocket
   connectWS(chatId);
 
-// Фокус на поле ввода
-  document.getElementById('msg-input').focus();
+// Фокус на поле ввода (только не на мобильном)
+  if (window.innerWidth > 600) {
+    document.getElementById('msg-input').focus();
+  }
 
   // Скрыть сайдбар на мобильном
   if (window.innerWidth <= 600) {
