@@ -25,10 +25,15 @@ app.include_router(websocket.router, prefix="/ws", tags=["websocket"])
 app.include_router(calls.router, prefix="/ws", tags=["calls"])
 app.include_router(global_ws_router, prefix="/ws", tags=["global"])
 
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).parent
+
 @app.get("/")
 def root():
-    return FileResponse("index.html")
+    return FileResponse(BASE_DIR / "index.html")
 
 @app.get("/call")
 def call_page():
-    return FileResponse("call.html")
+    return FileResponse(BASE_DIR / "call.html")
