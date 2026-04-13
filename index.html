@@ -1,0 +1,1660 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MyNet</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0d0d0f;
+    --bg2:      #141417;
+    --bg3:      #1c1c21;
+    --bg4:      #25252c;
+    --border:   #2e2e38;
+    --accent:   #00e5a0;
+    --accent2:  #00b87a;
+    --text:     #e8e8f0;
+    --text2:    #8888a0;
+    --text3:    #55556a;
+    --danger:   #ff4d6a;
+    --me-bubble:#1a3a2e;
+    --me-text:  #b8f0d8;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  /* ── SCREENS ───────────────────────────── */
+  .screen { display: none; height: 100vh; }
+  .screen.active { display: flex; }
+
+  /* ── AUTH ──────────────────────────────── */
+  #auth-screen {
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .auth-wrap {
+    width: 360px;
+    animation: fadeUp .4s ease both;
+  }
+
+  .auth-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  .auth-logo span { color: var(--text3); }
+
+  .auth-sub {
+    color: var(--text2);
+    font-size: 13px;
+    margin-bottom: 36px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .auth-tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 24px;
+    border: 1px solid var(--border);
+  }
+
+  .auth-tab {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--text2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .auth-tab.active {
+    background: var(--accent);
+    color: #000;
+    font-weight: 600;
+  }
+
+  .auth-form { display: flex; flex-direction: column; gap: 12px; }
+  .auth-form.hidden { display: none; }
+
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+
+  .field-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+
+  .field-input {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .field-input:focus { border-color: var(--accent); }
+
+  .btn-primary {
+    margin-top: 4px;
+    padding: 12px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: .05em;
+    transition: background .2s, transform .1s;
+  }
+
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-primary:active { transform: scale(.98); }
+
+  .auth-error {
+    color: var(--danger);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    min-height: 16px;
+    margin-top: -4px;
+  }
+
+  /* ── APP LAYOUT ────────────────────────── */
+  #app-screen {
+    flex-direction: row;
+    height: 100vh;
+  }
+
+  /* ── SIDEBAR ───────────────────────────── */
+  #sidebar {
+    width: 280px;
+    min-width: 280px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .sidebar-logo {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: -0.5px;
+  }
+
+  .sidebar-actions { display: flex; gap: 6px; }
+
+  .icon-btn {
+    width: 32px; height: 32px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px;
+    transition: all .2s;
+  }
+
+  .icon-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Search */
+  .sidebar-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-input {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 7px 10px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .search-input:focus { border-color: var(--accent); }
+  .search-input::placeholder { color: var(--text3); }
+
+  /* Search results */
+  .search-results {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-top: none;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+  }
+
+  .search-results.show { display: block; }
+
+  .search-result-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background .15s;
+  }
+
+  .search-result-item:hover { background: var(--bg4); }
+
+  /* Chat list */
+  .chat-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 4px 0;
+  }
+
+  .chat-list::-webkit-scrollbar { width: 4px; }
+  .chat-list::-webkit-scrollbar-track { background: transparent; }
+  .chat-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .chat-item {
+    padding: 11px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-left: 2px solid transparent;
+    transition: all .15s;
+  }
+
+  .chat-item:hover { background: var(--bg3); }
+  .chat-item.active { background: var(--bg3); border-left-color: var(--accent); }
+
+  .avatar {
+    width: 36px; height: 36px;
+    border-radius: 0;
+    background: var(--bg4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .avatar.online::after {
+    content: '';
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border: 2px solid var(--bg2);
+  }
+
+  .avatar.large {
+    width: 42px; height: 42px;
+    font-size: 15px;
+  }
+
+  .chat-info { flex: 1; min-width: 0; }
+
+  .chat-name {
+    font-weight: 500;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .chat-preview {
+    font-size: 12px;
+    color: var(--text2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-top: 2px;
+  }
+
+  .chat-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .chat-time {
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .unread-badge {
+    background: var(--accent);
+    color: #000;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 1px 5px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  /* Sidebar bottom */
+  .sidebar-bottom {
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .sidebar-user-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+  }
+
+  .logout-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text3);
+    padding: 5px 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .logout-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* ── MAIN CHAT AREA ────────────────────── */
+  #chat-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background: var(--bg);
+  }
+
+  /* Empty state */
+  #empty-state {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--text3);
+  }
+
+  .empty-icon {
+    font-size: 48px;
+    opacity: .3;
+  }
+
+  .empty-text {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+  }
+
+  /* Chat window */
+  #chat-window {
+    display: none;
+    flex-direction: column;
+    flex: 1;
+    overflow: hidden;
+  }
+
+  #chat-window.active { display: flex; }
+
+  /* Chat header */
+  .chat-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg2);
+  }
+
+  .chat-header-info { flex: 1; }
+
+  .chat-header-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+
+  .chat-header-status {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-top: 1px;
+  }
+
+  .chat-header-status.online { color: var(--accent); }
+
+  .chat-header-actions { display: flex; gap: 6px; }
+
+  /* Messages */
+  #messages-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  #messages-list::-webkit-scrollbar { width: 4px; }
+  #messages-list::-webkit-scrollbar-track { background: transparent; }
+  #messages-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+  .msg-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-bottom: 10px;
+  }
+
+  .msg-group.mine { align-items: flex-end; }
+  .msg-group.theirs { align-items: flex-start; }
+
+  .msg-sender-name {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    margin-bottom: 3px;
+    padding-left: 2px;
+  }
+
+  .msg-bubble {
+    max-width: 65%;
+    padding: 8px 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    word-break: break-word;
+    position: relative;
+    animation: msgIn .2s ease both;
+  }
+
+  .msg-group.theirs .msg-bubble {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-top-left-radius: 0;
+  }
+
+  .msg-group.mine .msg-bubble {
+    background: var(--me-bubble);
+    border: 1px solid #2a5040;
+    color: var(--me-text);
+  }
+
+  .msg-time {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    padding: 0 2px;
+    margin-top: 2px;
+  }
+
+  .msg-date-divider {
+    text-align: center;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    margin: 12px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .msg-date-divider::before,
+  .msg-date-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* Typing indicator */
+  .typing-indicator {
+    padding: 4px 20px 0;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--accent);
+    height: 20px;
+    transition: opacity .2s;
+  }
+
+  /* Input area */
+  .input-area {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    gap: 10px;
+    align-items: flex-end;
+  }
+
+  #msg-input {
+    flex: 1;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 10px 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    resize: none;
+    max-height: 120px;
+    line-height: 1.5;
+    transition: border-color .2s;
+  }
+
+  #msg-input:focus { border-color: var(--accent); }
+  #msg-input::placeholder { color: var(--text3); }
+
+  .send-btn {
+    width: 44px; height: 44px;
+    background: var(--accent);
+    border: none;
+    color: #000;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .2s, transform .1s;
+    flex-shrink: 0;
+  }
+
+  .send-btn:hover { background: var(--accent2); }
+  .send-btn:active { transform: scale(.94); }
+
+  /* ── NEW CHAT MODAL ─────────────────────── */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(2px);
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    width: 400px;
+    padding: 24px;
+    animation: fadeUp .25s ease both;
+  }
+
+  .modal-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    margin-bottom: 20px;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+  }
+
+  .modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .btn-ghost {
+    padding: 9px 18px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .btn-ghost:hover { border-color: var(--text2); color: var(--text); }
+
+  .selected-users {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+    min-height: 28px;
+  }
+
+  .selected-chip {
+    background: var(--bg4);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--accent);
+  }
+
+  .chip-remove {
+    cursor: pointer;
+    color: var(--text3);
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .chip-remove:hover { color: var(--danger); }
+
+  /* ── ANIMATIONS ─────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes msgIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SCROLLBAR GLOBAL ───────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  /* ── EMPTY CHATS ────────────────────────── */
+  .no-chats {
+    padding: 24px 16px;
+    text-align: center;
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    line-height: 1.8;
+  }
+
+  /* ── INCOMING CALL ──────────────────────── */
+  #incoming-call {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 300px;
+    background: var(--bg2);
+    border: 1px solid var(--accent);
+    padding: 20px;
+    z-index: 200;
+    display: none;
+    flex-direction: column;
+    gap: 14px;
+    animation: slideIn .3s ease both;
+    box-shadow: 0 0 40px rgba(0,229,160,.15);
+  }
+
+  #incoming-call.show { display: flex; }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .incoming-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+  }
+
+  .incoming-name {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .incoming-type {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  .incoming-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-accept {
+    flex: 1;
+    padding: 10px;
+    background: var(--accent);
+    border: none;
+    color: #000;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+  }
+
+  .btn-accept:hover { background: var(--accent2); }
+
+  .btn-decline {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .btn-decline:hover { background: var(--danger); color: #fff; }
+
+  .incoming-avatar {
+    width: 48px; height: 48px;
+    background: var(--bg4);
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--border);
+    animation: avatarPulse 1.2s ease infinite;
+  }
+
+  @keyframes avatarPulse {
+    0%, 100% { border-color: var(--border); box-shadow: none; }
+    50% { border-color: var(--accent); box-shadow: 0 0 12px rgba(0,229,160,.3); }
+  }
+
+  .incoming-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+
+  /* ── INCOMING CALL ──────────────────────── */
+  #incoming-call {
+    display: none;
+    position: fixed;
+    top: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 200;
+    background: var(--bg2);
+    border: 1px solid var(--accent);
+    padding: 20px 28px;
+    min-width: 320px;
+    animation: fadeUp .3s ease both;
+    box-shadow: 0 0 40px rgba(0,229,160,.15);
+  }
+
+  #incoming-call.show { display: block; }
+
+  .call-notify-top {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .call-ring-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: ringPulse .8s ease infinite;
+  }
+
+  @keyframes ringPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%       { transform: scale(1.6); opacity: .5; }
+  }
+
+  .call-notify-name {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .call-notify-type {
+    font-size: 12px;
+    color: var(--text2);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 18px;
+  }
+
+  .call-notify-btns {
+    display: flex;
+    gap: 10px;
+  }
+
+  .btn-accept {
+    flex: 1;
+    padding: 10px;
+    background: var(--accent);
+    color: #000;
+    border: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .2s;
+  }
+
+  .btn-accept:hover { background: var(--accent2); }
+
+  .btn-decline {
+    flex: 1;
+    padding: 10px;
+    background: none;
+    color: var(--danger);
+    border: 1px solid var(--danger);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .btn-decline:hover { background: var(--danger); color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     AUTH SCREEN
+════════════════════════════════════════════ -->
+<div id="auth-screen" class="screen active">
+  <div class="auth-wrap">
+    <div class="auth-logo">my<span>_</span>net</div>
+    <div class="auth-sub">// private messenger</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchTab('login')">войти</button>
+      <button class="auth-tab" onclick="switchTab('register')">регистрация</button>
+    </div>
+
+    <!-- Login form -->
+    <div id="login-form" class="auth-form">
+      <div class="field-group">
+        <label class="field-label">имя пользователя</label>
+        <input class="field-input" id="login-username" type="text" placeholder="username" autocomplete="username">
+      </div>
+      <div class="field-group">
+        <label class="field-label">пароль</label>
+        <input class="field-input" id="login-password" type="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <div class="auth-error" id="login-error"></div>
+      <button class="btn-primary" onclick="doLogin()">→ войти</button>
+    </div>
+
+    <!-- Register form -->
+    <div id="register-form" class="auth-form hidden">
+      <div class="field-group">
+        <label class="field-label">имя пользователя</label>
+        <input class="field-input" id="reg-username" type="text" placeholder="username">
+      </div>
+      <div class="field-group">
+        <label class="field-label">email</label>
+        <input class="field-input" id="reg-email" type="email" placeholder="you@example.com">
+      </div>
+      <div class="field-group">
+        <label class="field-label">отображаемое имя</label>
+        <input class="field-input" id="reg-display" type="text" placeholder="Как тебя зовут">
+      </div>
+      <div class="field-group">
+        <label class="field-label">пароль</label>
+        <input class="field-input" id="reg-password" type="password" placeholder="••••••••">
+      </div>
+      <div class="auth-error" id="reg-error"></div>
+      <button class="btn-primary" onclick="doRegister()">→ создать аккаунт</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     APP SCREEN
+════════════════════════════════════════════ -->
+<div id="app-screen" class="screen">
+
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">my_net</div>
+      <div class="sidebar-actions">
+        <button class="icon-btn" title="Новый чат" onclick="openNewChatModal()">✎</button>
+      </div>
+    </div>
+
+    <div class="sidebar-search">
+      <input class="search-input" id="user-search-input" type="text" placeholder="Поиск пользователей...">
+      <div class="search-results" id="search-results"></div>
+    </div>
+
+    <div class="chat-list" id="chat-list">
+      <div class="no-chats">Нет чатов.<br>Найди пользователя выше<br>чтобы начать общение.</div>
+    </div>
+
+    <div class="sidebar-bottom">
+      <div class="avatar" id="my-avatar">?</div>
+      <div class="sidebar-user-name" id="my-username">—</div>
+      <button class="logout-btn" onclick="doLogout()">выйти</button>
+    </div>
+  </div>
+
+  <!-- CHAT AREA -->
+  <div id="chat-area">
+    <div id="empty-state">
+      <div class="empty-icon">◻</div>
+      <div class="empty-text">// выберите чат</div>
+    </div>
+
+    <div id="chat-window">
+      <div class="chat-header">
+        <div class="avatar large" id="chat-avatar">?</div>
+        <div class="chat-header-info">
+          <div class="chat-header-name" id="chat-header-name">—</div>
+          <div class="chat-header-status" id="chat-header-status"></div>
+        </div>
+        <div class="chat-header-actions">
+          <button class="icon-btn" title="Голосовой звонок" onclick="startCall('audio')" id="btn-audio-call">☎</button>
+          <button class="icon-btn" title="Видеозвонок" onclick="startCall('video')" id="btn-video-call">⬡</button>
+        </div>
+      </div>
+
+      <div id="messages-list"></div>
+      <div class="typing-indicator" id="typing-indicator"></div>
+
+      <div class="input-area">
+        <textarea id="msg-input" rows="1" placeholder="Написать сообщение..."></textarea>
+        <button class="send-btn" onclick="sendMessage()">→</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- INCOMING CALL NOTIFICATION -->
+<div id="incoming-call">
+  <div class="incoming-title">// входящий звонок</div>
+  <div class="incoming-header">
+    <div class="incoming-avatar" id="incoming-avatar">?</div>
+    <div>
+      <div class="incoming-name" id="incoming-name">—</div>
+      <div class="incoming-type" id="incoming-type">голосовой звонок</div>
+    </div>
+  </div>
+  <div class="incoming-actions">
+    <button class="btn-accept" onclick="acceptCall()">✓ принять</button>
+    <button class="btn-decline" onclick="declineCall()">✕ отклонить</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     NEW CHAT MODAL
+════════════════════════════════════════════ -->
+<div class="modal-overlay" id="new-chat-modal">
+  <div class="modal">
+    <div class="modal-title">// новый чат</div>
+
+    <div class="field-group">
+      <label class="field-label">найти пользователя</label>
+      <input class="field-input" id="modal-search" type="text" placeholder="Введите имя...">
+      <div class="search-results" id="modal-search-results" style="position:relative"></div>
+    </div>
+
+    <div class="selected-users" id="selected-users"></div>
+
+    <div class="field-group" id="group-name-field" style="display:none; margin-top:12px">
+      <label class="field-label">название группы</label>
+      <input class="field-input" id="group-name-input" type="text" placeholder="Название чата">
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeNewChatModal()">отмена</button>
+      <button class="btn-primary" style="padding:9px 24px" onclick="createChat()">создать →</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- INCOMING CALL NOTIFICATION -->
+<div id="incoming-call">
+  <div class="call-notify-top">
+    <div class="call-ring-dot"></div>
+    <span>входящий звонок</span>
+  </div>
+  <div class="call-notify-name" id="caller-name">—</div>
+  <div class="call-notify-type" id="call-type-label">голосовой звонок</div>
+  <div class="call-notify-btns">
+    <button class="btn-accept" onclick="acceptCall()">✓ принять</button>
+    <button class="btn-decline" onclick="declineCall()">✕ отклонить</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  CONFIG
+// ═══════════════════════════════════════════
+const API = 'http://localhost:8000';  // ← замени на свой сервер при деплое
+let token = localStorage.getItem('token');
+let currentUser = null;
+let currentChatId = null;
+let ws = null;
+let typingTimeout = null;
+let selectedUsers = [];  // для модала нового чата
+let incomingCallData = null;
+let ringtoneInterval = null;
+let audioCtx = null;
+let globalWs = null;
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+async function init() {
+  if (token) {
+    try {
+      currentUser = await apiGet('/api/users/me');
+      showApp();
+    } catch {
+      token = null;
+      localStorage.removeItem('token');
+    }
+  }
+}
+
+init();
+
+// ═══════════════════════════════════════════
+//  API HELPERS
+// ═══════════════════════════════════════════
+async function apiGet(path) {
+  const r = await fetch(API + path, { headers: { Authorization: 'Bearer ' + token } });
+  if (!r.ok) throw await r.json();
+  return r.json();
+}
+
+async function apiPost(path, body) {
+  const r = await fetch(API + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw await r.json();
+  return r.json();
+}
+
+// ═══════════════════════════════════════════
+//  AUTH
+// ═══════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t, i) => {
+    t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+  });
+  document.getElementById('login-form').classList.toggle('hidden', tab !== 'login');
+  document.getElementById('register-form').classList.toggle('hidden', tab !== 'register');
+}
+
+async function doLogin() {
+  const username = document.getElementById('login-username').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.textContent = '';
+  try {
+    const data = await apiPost('/api/auth/login', { username, password });
+    token = data.access_token;
+    localStorage.setItem('token', token);
+    currentUser = await apiGet('/api/users/me');
+    showApp();
+  } catch (e) {
+    errEl.textContent = e.detail || 'Ошибка входа';
+  }
+}
+
+async function doRegister() {
+  const username = document.getElementById('reg-username').value.trim();
+  const email = document.getElementById('reg-email').value.trim();
+  const display_name = document.getElementById('reg-display').value.trim();
+  const password = document.getElementById('reg-password').value;
+  const errEl = document.getElementById('reg-error');
+  errEl.textContent = '';
+  try {
+    await apiPost('/api/auth/register', { username, email, display_name, password });
+    // Автовход
+    const data = await apiPost('/api/auth/login', { username, password });
+    token = data.access_token;
+    localStorage.setItem('token', token);
+    currentUser = await apiGet('/api/users/me');
+    showApp();
+  } catch (e) {
+    errEl.textContent = e.detail || 'Ошибка регистрации';
+  }
+}
+
+async function doLogout() {
+  try { await apiPost('/api/auth/logout', {}); } catch {}
+  token = null;
+  localStorage.removeItem('token');
+  currentUser = null;
+  currentChatId = null;
+  if (ws) ws.close();
+  ws = null;
+  if (globalWs) globalWs.close();
+  globalWs = null;
+  document.getElementById('auth-screen').classList.add('active');
+  document.getElementById('app-screen').classList.remove('active');
+  document.getElementById('chat-window').classList.remove('active');
+  document.getElementById('empty-state').style.display = 'flex';
+}
+
+// ═══════════════════════════════════════════
+//  SHOW APP
+// ═══════════════════════════════════════════
+async function showApp() {
+  document.getElementById('auth-screen').classList.remove('active');
+  document.getElementById('app-screen').classList.add('active');
+
+  // Профиль в сайдбаре
+  document.getElementById('my-username').textContent = currentUser.display_name || currentUser.username;
+  document.getElementById('my-avatar').textContent = avatarLetter(currentUser.display_name || currentUser.username);
+
+  await loadChats();
+  setupSearch();
+  connectGlobalWS();
+}
+
+function avatarLetter(name) {
+  return (name || '?')[0].toUpperCase();
+}
+
+// ═══════════════════════════════════════════
+//  CHATS LIST
+// ═══════════════════════════════════════════
+async function loadChats() {
+  const chats = await apiGet('/api/chats/');
+  renderChatList(chats);
+}
+
+function renderChatList(chats) {
+  const el = document.getElementById('chat-list');
+  if (!chats.length) {
+    el.innerHTML = '<div class="no-chats">Нет чатов.<br>Найди пользователя выше<br>чтобы начать общение.</div>';
+    return;
+  }
+  el.innerHTML = chats.map(c => {
+    const other = getOtherMember(c);
+    const name = c.is_group ? c.name : (other ? (other.display_name || other.username) : 'Чат');
+    const letter = avatarLetter(name);
+    const online = !c.is_group && other && other.is_online;
+    return `
+      <div class="chat-item${currentChatId === c.id ? ' active' : ''}" onclick="openChat(${c.id})" id="chat-item-${c.id}">
+        <div class="avatar${online ? ' online' : ''}">${letter}</div>
+        <div class="chat-info">
+          <div class="chat-name">${esc(name)}</div>
+          <div class="chat-preview" id="preview-${c.id}">нет сообщений</div>
+        </div>
+        <div class="chat-meta">
+          <div class="chat-time" id="time-${c.id}"></div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function getOtherMember(chat) {
+  if (!currentUser) return null;
+  return chat.members.find(m => m.id !== currentUser.id) || null;
+}
+
+// ═══════════════════════════════════════════
+//  OPEN CHAT
+// ═══════════════════════════════════════════
+async function openChat(chatId) {
+  currentChatId = chatId;
+
+  // Обновляем активный элемент в списке
+  document.querySelectorAll('.chat-item').forEach(el => el.classList.remove('active'));
+  const item = document.getElementById('chat-item-' + chatId);
+  if (item) item.classList.add('active');
+
+  // Показываем окно чата
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('chat-window').classList.add('active');
+
+  // Информация о чате
+  const chat = await apiGet('/api/chats/' + chatId);
+  const other = getOtherMember(chat);
+  const name = chat.is_group ? chat.name : (other ? (other.display_name || other.username) : 'Чат');
+
+  document.getElementById('chat-header-name').textContent = name;
+  document.getElementById('chat-avatar').textContent = avatarLetter(name);
+
+  const statusEl = document.getElementById('chat-header-status');
+  if (!chat.is_group && other) {
+    statusEl.textContent = other.is_online ? '● онлайн' : '○ не в сети';
+    statusEl.className = 'chat-header-status' + (other.is_online ? ' online' : '');
+  } else {
+    statusEl.textContent = chat.members.length + ' участников';
+    statusEl.className = 'chat-header-status';
+  }
+
+  // Загружаем сообщения
+  const msgs = await apiGet('/api/messages/' + chatId);
+  renderMessages(msgs);
+
+  // Помечаем прочитанными
+  apiPost('/api/messages/' + chatId + '/read', {}).catch(() => {});
+
+  // WebSocket
+  connectWS(chatId);
+
+  // Фокус на поле ввода
+  document.getElementById('msg-input').focus();
+}
+
+// ═══════════════════════════════════════════
+//  MESSAGES
+// ═══════════════════════════════════════════
+function renderMessages(msgs) {
+  const list = document.getElementById('messages-list');
+  list.innerHTML = '';
+
+  let lastDate = null;
+  let lastSenderId = null;
+  let group = null;
+
+  msgs.forEach(msg => {
+    const d = new Date(msg.created_at + 'Z');
+    const dateStr = d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' });
+
+    if (dateStr !== lastDate) {
+      lastDate = dateStr;
+      lastSenderId = null;
+      const div = document.createElement('div');
+      div.className = 'msg-date-divider';
+      div.textContent = dateStr;
+      list.appendChild(div);
+    }
+
+    const mine = msg.sender.id === currentUser.id;
+
+    if (msg.sender.id !== lastSenderId) {
+      group = document.createElement('div');
+      group.className = 'msg-group ' + (mine ? 'mine' : 'theirs');
+      if (!mine) {
+        const nameEl = document.createElement('div');
+        nameEl.className = 'msg-sender-name';
+        nameEl.textContent = msg.sender.display_name || msg.sender.username;
+        group.appendChild(nameEl);
+      }
+      list.appendChild(group);
+      lastSenderId = msg.sender.id;
+    }
+
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = msg.content;
+    group.appendChild(bubble);
+
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = d.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+    group.appendChild(time);
+  });
+
+  list.scrollTop = list.scrollHeight;
+}
+
+function appendMessage(data) {
+  const list = document.getElementById('messages-list');
+  const mine = data.sender_id === currentUser.id;
+
+  const group = document.createElement('div');
+  group.className = 'msg-group ' + (mine ? 'mine' : 'theirs');
+
+  if (!mine) {
+    const nameEl = document.createElement('div');
+    nameEl.className = 'msg-sender-name';
+    nameEl.textContent = data.sender_display_name || data.sender_username;
+    group.appendChild(nameEl);
+  }
+
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = data.content;
+  group.appendChild(bubble);
+
+  const time = document.createElement('div');
+  time.className = 'msg-time';
+  time.textContent = new Date(data.created_at + 'Z').toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+  group.appendChild(time);
+
+  list.appendChild(group);
+  list.scrollTop = list.scrollHeight;
+
+  // Обновляем preview в сайдбаре
+  const preview = document.getElementById('preview-' + currentChatId);
+  if (preview) preview.textContent = (mine ? 'Вы: ' : '') + data.content;
+  const timeEl = document.getElementById('time-' + currentChatId);
+  if (timeEl) timeEl.textContent = new Date(data.created_at + 'Z').toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+}
+
+// ═══════════════════════════════════════════
+//  WEBSOCKET
+// ═══════════════════════════════════════════
+function connectWS(chatId) {
+  if (ws) ws.close();
+  const wsUrl = API.replace('http', 'ws') + '/ws/chat/' + chatId + '?token=' + token;
+  ws = new WebSocket(wsUrl);
+
+  ws.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'message') {
+      appendMessage(data);
+    } else if (data.type === 'typing') {
+      showTyping(data.username);
+    } else if (data.type === 'call_invite') {
+      showIncomingCall(data);
+    } else if (data.type === 'call_cancel') {
+      hideIncomingCall();
+    } else if (data.type === 'user_online' || data.type === 'user_offline') {
+      // Обновить статус в заголовке
+      const online = data.type === 'user_online';
+      const statusEl = document.getElementById('chat-header-status');
+      if (statusEl) {
+        statusEl.textContent = online ? '● онлайн' : '○ не в сети';
+        statusEl.className = 'chat-header-status' + (online ? ' online' : '');
+      }
+    }
+  };
+
+  ws.onerror = () => console.warn('WS error');
+  ws.onclose = () => {};
+}
+
+function showTyping(username) {
+  const el = document.getElementById('typing-indicator');
+  el.textContent = username + ' печатает...';
+  clearTimeout(typingTimeout);
+  typingTimeout = setTimeout(() => { el.textContent = ''; }, 2500);
+}
+
+// ═══════════════════════════════════════════
+//  SEND MESSAGE
+// ═══════════════════════════════════════════
+function sendMessage() {
+  const input = document.getElementById('msg-input');
+  const content = input.value.trim();
+  if (!content || !ws || ws.readyState !== WebSocket.OPEN) return;
+
+  ws.send(JSON.stringify({ type: 'message', content }));
+  input.value = '';
+  input.style.height = 'auto';
+}
+
+// Typing через WebSocket
+document.addEventListener('DOMContentLoaded', () => {
+  const input = document.getElementById('msg-input');
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  input.addEventListener('input', () => {
+    // Авторазмер textarea
+    input.style.height = 'auto';
+    input.style.height = Math.min(input.scrollHeight, 120) + 'px';
+
+    // Сигнал "печатает"
+    if (ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'typing' }));
+    }
+  });
+});
+
+// ═══════════════════════════════════════════
+//  SEARCH USERS (sidebar)
+// ═══════════════════════════════════════════
+function setupSearch() {
+  let searchTimer = null;
+  const input = document.getElementById('user-search-input');
+  const results = document.getElementById('search-results');
+
+  input.addEventListener('input', () => {
+    clearTimeout(searchTimer);
+    const q = input.value.trim();
+    if (!q) { results.classList.remove('show'); return; }
+
+    searchTimer = setTimeout(async () => {
+      try {
+        const users = await apiGet('/api/users/search?q=' + encodeURIComponent(q));
+        results.innerHTML = users.slice(0, 6).map(u => `
+          <div class="search-result-item" onclick="startDirectChat(${u.id}, '${esc(u.display_name || u.username)}')">
+            <div class="avatar" style="width:28px;height:28px;font-size:11px">${avatarLetter(u.display_name || u.username)}</div>
+            <span>${esc(u.display_name || u.username)}</span>
+            <span style="color:var(--text3);font-size:11px;margin-left:auto">@${esc(u.username)}</span>
+          </div>`).join('') || '<div style="padding:10px 12px;color:var(--text3);font-size:12px">Не найдено</div>';
+        results.classList.add('show');
+      } catch {}
+    }, 300);
+  });
+
+  // Скрыть при клике вне
+  document.addEventListener('click', (e) => {
+    if (!input.contains(e.target) && !results.contains(e.target)) {
+      results.classList.remove('show');
+    }
+  });
+}
+
+async function startDirectChat(userId, name) {
+  document.getElementById('user-search-input').value = '';
+  document.getElementById('search-results').classList.remove('show');
+  try {
+    const chat = await apiPost('/api/chats/', { member_ids: [userId], is_group: false });
+    await loadChats();
+    openChat(chat.id);
+  } catch (e) {
+    alert('Ошибка создания чата');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  NEW CHAT MODAL
+// ═══════════════════════════════════════════
+function openNewChatModal() {
+  selectedUsers = [];
+  document.getElementById('selected-users').innerHTML = '';
+  document.getElementById('modal-search').value = '';
+  document.getElementById('modal-search-results').innerHTML = '';
+  document.getElementById('modal-search-results').classList.remove('show');
+  document.getElementById('group-name-field').style.display = 'none';
+  document.getElementById('new-chat-modal').classList.add('show');
+
+  // Поиск в модале
+  const input = document.getElementById('modal-search');
+  const results = document.getElementById('modal-search-results');
+  let t = null;
+  input.oninput = () => {
+    clearTimeout(t);
+    const q = input.value.trim();
+    if (!q) { results.classList.remove('show'); return; }
+    t = setTimeout(async () => {
+      const users = await apiGet('/api/users/search?q=' + encodeURIComponent(q));
+      results.innerHTML = users.slice(0, 5).map(u => `
+        <div class="search-result-item" onclick="addToSelected(${u.id}, '${esc(u.display_name || u.username)}', '${esc(u.username)}')">
+          <div class="avatar" style="width:28px;height:28px;font-size:11px">${avatarLetter(u.display_name || u.username)}</div>
+          <span>${esc(u.display_name || u.username)}</span>
+          <span style="color:var(--text3);font-size:11px;margin-left:auto">@${esc(u.username)}</span>
+        </div>`).join('') || '<div style="padding:8px 12px;color:var(--text3);font-size:12px">Не найдено</div>';
+      results.classList.add('show');
+    }, 300);
+  };
+}
+
+function addToSelected(id, displayName, username) {
+  if (selectedUsers.find(u => u.id === id)) return;
+  selectedUsers.push({ id, displayName, username });
+  document.getElementById('modal-search').value = '';
+  document.getElementById('modal-search-results').classList.remove('show');
+
+  // Показываем поле названия группы если > 1
+  document.getElementById('group-name-field').style.display = selectedUsers.length > 1 ? 'block' : 'none';
+
+  renderSelectedChips();
+}
+
+function removeFromSelected(id) {
+  selectedUsers = selectedUsers.filter(u => u.id !== id);
+  document.getElementById('group-name-field').style.display = selectedUsers.length > 1 ? 'block' : 'none';
+  renderSelectedChips();
+}
+
+function renderSelectedChips() {
+  document.getElementById('selected-users').innerHTML = selectedUsers.map(u => `
+    <div class="selected-chip">
+      ${esc(u.displayName)}
+      <span class="chip-remove" onclick="removeFromSelected(${u.id})">×</span>
+    </div>`).join('');
+}
+
+function closeNewChatModal() {
+  document.getElementById('new-chat-modal').classList.remove('show');
+}
+
+async function createChat() {
+  if (!selectedUsers.length) return;
+  const isGroup = selectedUsers.length > 1;
+  const name = isGroup ? document.getElementById('group-name-input').value.trim() : '';
+  try {
+    const chat = await apiPost('/api/chats/', {
+      member_ids: selectedUsers.map(u => u.id),
+      is_group: isGroup,
+      name
+    });
+    closeNewChatModal();
+    await loadChats();
+    openChat(chat.id);
+  } catch (e) {
+    alert('Ошибка: ' + (e.detail || 'Не удалось создать чат'));
+  }
+}
+
+// ═══════════════════════════════════════════
+//  CALLS — WebRTC
+// ═══════════════════════════════════════════
+
+function connectGlobalWS() {
+  if (globalWs) globalWs.close();
+  const url = API.replace('http', 'ws') + '/ws/global?token=' + token;
+  globalWs = new WebSocket(url);
+
+  globalWs.onmessage = (e) => {
+    const data = JSON.parse(e.data);
+    if (data.type === 'call_invite') {
+      showIncomingCall(data);
+    } else if (data.type === 'call_cancel') {
+      hideIncomingCall();
+    }
+  };
+
+  globalWs.onclose = () => {
+    // Переподключение через 3 сек
+    setTimeout(() => { if (token) connectGlobalWS(); }, 3000);
+  };
+}
+
+async function startCall(type) {
+  if (!currentChatId) return;
+
+  const chatItem = document.getElementById('chat-item-' + currentChatId);
+  const chatName = chatItem
+    ? chatItem.querySelector('.chat-name')?.textContent || 'Звонок'
+    : 'Звонок';
+
+  const myName = encodeURIComponent(currentUser.display_name || currentUser.username);
+  const chatNameEnc = encodeURIComponent(chatName);
+  const apiBase = encodeURIComponent(API);
+
+  // Уведомляем собеседника через глобальный WS
+  if (globalWs && globalWs.readyState === WebSocket.OPEN) {
+    globalWs.send(JSON.stringify({ type: 'call_invite', call_type: type, chat_id: currentChatId }));
+  }
+
+  const url = `/call?api=${apiBase}&token=${token}&chat_id=${currentChatId}&type=${type}&name=${myName}&chat_name=${chatNameEnc}`;
+  window.open(url, '_blank', 'width=900,height=640,resizable=yes');
+}
+
+function showIncomingCall(data) {
+  incomingCallData = data;
+  document.getElementById('caller-name').textContent = data.caller_name;
+  document.getElementById('call-type-label').textContent =
+    data.call_type === 'video' ? '📷 видеозвонок' : '☎ голосовой звонок';
+  document.getElementById('incoming-call').classList.add('show');
+  startRingtone();
+  setTimeout(declineCall, 30000);
+}
+
+function hideIncomingCall() {
+  document.getElementById('incoming-call').classList.remove('show');
+  stopRingtone();
+  incomingCallData = null;
+}
+
+function acceptCall() {
+  if (!incomingCallData) return;
+  const d = incomingCallData;
+  hideIncomingCall();
+  const myName = encodeURIComponent(currentUser.display_name || currentUser.username);
+  const chatName = encodeURIComponent(d.caller_name);
+  const apiBase = encodeURIComponent(API);
+  const url = `/call?api=${apiBase}&token=${token}&chat_id=${d.chat_id}&type=${d.call_type}&name=${myName}&chat_name=${chatName}`;
+  window.open(url, '_blank', 'width=900,height=640,resizable=yes');
+}
+
+function declineCall() {
+  hideIncomingCall();
+}
+
+function startRingtone() {
+  stopRingtone();
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  function playTone() {
+    if (!audioCtx) return;
+    const notes = [880, 1108, 1318, 1108];
+    notes.forEach((freq, i) => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime + i * 0.12);
+      gain.gain.setValueAtTime(0, audioCtx.currentTime + i * 0.12);
+      gain.gain.linearRampToValueAtTime(0.18, audioCtx.currentTime + i * 0.12 + 0.04);
+      gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + i * 0.12 + 0.11);
+      osc.start(audioCtx.currentTime + i * 0.12);
+      osc.stop(audioCtx.currentTime + i * 0.12 + 0.12);
+    });
+  }
+  playTone();
+  ringtoneInterval = setInterval(playTone, 1800);
+}
+
+function stopRingtone() {
+  if (ringtoneInterval) { clearInterval(ringtoneInterval); ringtoneInterval = null; }
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+}
+// ═══════════════════════════════════════════
+//  UTILS
+// ═══════════════════════════════════════════
+function esc(str) {
+  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+</script>
+</body>
+</html>
